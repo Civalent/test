@@ -1,0 +1,607 @@
+<title>Crit Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one-screen studio app. Conversation on the left, a "crit desk" on the right
+   (bulb insight · what we've learned · exam quiz). On phones the desk slides over the chat. */
+:root{
+  --paper:#f2f3ef; --sheet:#ffffff; --sheet-2:#e9ebe5; --rule:#d3d7cf; --ink:#1b211e; --ink-2:#56605a; --ink-3:#848d87;
+  --blue:#294a7a; --blue-soft:#e3e9f3; --lamp:#e9a91c; --lamp-soft:#fbf0d4; --lamp-ink:#6b4a00;
+  --mine:#e6ece4; --q:#7a2f47; --q-soft:#f6e6ec; --ok:#2f6a35; --bad:#a03030;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121614; --sheet:#1a1f1c; --sheet-2:#222824; --rule:#323a35; --ink:#e5e9e4; --ink-2:#a6afa9; --ink-3:#77817b;
+  --blue:#93b2e4; --blue-soft:#1d2a3d; --lamp:#ffc94a; --lamp-soft:#3a2e10; --lamp-ink:#ffe3a0;
+  --mine:#1f2a22; --q:#f0a9bf; --q-soft:#3a1d27; --ok:#9fd3a3; --bad:#f19a9a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121614; --sheet:#1a1f1c; --sheet-2:#222824; --rule:#323a35; --ink:#e5e9e4; --ink-2:#a6afa9; --ink-3:#77817b;
+  --blue:#93b2e4; --blue-soft:#1d2a3d; --lamp:#ffc94a; --lamp-soft:#3a2e10; --lamp-ink:#ffe3a0;
+  --mine:#1f2a22; --q:#f0a9bf; --q-soft:#3a1d27; --ok:#9fd3a3; --bad:#f19a9a; color-scheme:dark}
+
+html,body{height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.app{height:100%;display:grid;grid-template-rows:auto 1fr;}
+header.top{display:flex;align-items:center;gap:14px;background:var(--sheet);border-bottom:1px solid var(--rule);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{display:flex;flex-direction:column;min-width:0;flex:1}
+.brand h1{margin:0;font:800 20px/1.1 var(--f-display);letter-spacing:-.01em}
+.brand p{margin:0;color:var(--ink-3);font:12px/1.3 var(--f-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who{display:flex;align-items:center}
+.who img{width:28px;height:28px;border-radius:50%;border:2px solid var(--sheet);margin-left:-8px;background:var(--sheet-2)}
+.who img:first-child{margin-left:0}
+
+.bulb-btn{position:relative;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:1px solid var(--rule);background:var(--sheet)}
+.bulb-btn svg{width:26px;height:26px}
+.bulb-btn .glass{fill:none;stroke:var(--ink-3);stroke-width:1.6;transition:fill .25s, stroke .25s}
+.bulb-btn .base{fill:var(--ink-3)}
+.bulb-btn.lit{background:var(--lamp-soft);border-color:var(--lamp);box-shadow:0 0 0 4px color-mix(in srgb,var(--lamp) 25%,transparent),0 0 22px color-mix(in srgb,var(--lamp) 55%,transparent)}
+.bulb-btn.lit .glass{fill:var(--lamp);stroke:var(--lamp-ink)}
+.bulb-btn.lit .base{fill:var(--lamp-ink)}
+.bulb-btn.thinking .glass{animation:flick 1.1s ease-in-out infinite}
+@keyframes flick{0%,100%{fill:transparent}50%{fill:color-mix(in srgb,var(--lamp) 45%,transparent)}}
+.bulb-btn .count{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--lamp-ink);color:var(--lamp-soft);font:600 11px/18px var(--f-mono);text-align:center}
+.desk-toggle{display:none;border:1px solid var(--rule);background:var(--sheet);border-radius:var(--r);padding:8px 10px;font-weight:600;font-size:13px}
+
+main.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:0}
+/* Chat column */
+.chat{display:grid;grid-template-rows:1fr auto;min-height:0;min-width:0}
+.stream{overflow-y:auto;padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:10px}
+.status{font:12px var(--f-mono);color:var(--ink-3);text-align:center}
+.day{align-self:center;font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:4px 10px;border:1px solid var(--rule);border-radius:999px;margin-block:6px}
+.msg{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px;max-width:760px}
+.msg img.av{width:32px;height:32px;border-radius:50%;background:var(--sheet-2)}
+.bubble{background:var(--sheet);border:1px solid var(--rule);border-radius:4px var(--r) var(--r) var(--r);padding:9px 12px;min-width:0}
+.msg.mine .bubble{background:var(--mine)}
+.msg.question .bubble{border-left:3px solid var(--q)}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--ink-3);margin-bottom:2px}
+.meta b{color:var(--ink);font-weight:600;font-size:13px}
+.chip{font:500 10.5px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2)}
+.chip.q{color:var(--q);border-color:currentColor;background:var(--q-soft)}
+.chip.topic{color:var(--blue);border-color:currentColor;background:var(--blue-soft);text-transform:none;letter-spacing:0}
+.text{white-space:pre-wrap;overflow-wrap:anywhere}
+.mini-bulb{margin-top:6px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:transparent;border-radius:999px;padding:2px 10px 2px 6px;font-size:12.5px;color:var(--ink-2)}
+.mini-bulb svg{width:14px;height:14px}
+.mini-bulb .glass{fill:none;stroke:currentColor;stroke-width:1.8}
+.mini-bulb.lit{background:var(--lamp-soft);border-color:var(--lamp);color:var(--lamp-ink);font-weight:600}
+.mini-bulb.lit .glass{fill:var(--lamp)}
+.mini-bulb.pending{border-style:dashed}
+
+.empty{margin:auto;max-width:520px;text-align:center;color:var(--ink-2);display:flex;flex-direction:column;gap:12px;padding:20px 0}
+.empty h2{font:700 22px/1.2 var(--f-display);color:var(--ink);margin:0;text-wrap:balance}
+.empty .sugg{display:flex;flex-direction:column;gap:8px;text-align:left}
+.empty .sugg button{border:1px dashed var(--rule);background:var(--sheet);border-radius:var(--r);padding:8px 12px;text-align:left;color:var(--ink-2)}
+.empty .sugg button:hover{border-color:var(--blue);color:var(--ink)}
+
+.composer{border-top:1px solid var(--rule);background:var(--sheet);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:8px}
+.kinds{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.kinds button{border:1px solid var(--rule);background:transparent;border-radius:999px;padding:3px 12px;font-size:13px;color:var(--ink-2)}
+.kinds button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.kinds button.qk[aria-pressed="true"]{background:var(--q);border-color:var(--q);color:var(--sheet)}
+.kinds .hint{margin-left:auto;font:11px var(--f-mono);color:var(--ink-3)}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row textarea{flex:1;min-width:0;resize:none;border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:9px 11px;max-height:160px;line-height:1.4}
+.btn{border:1px solid var(--blue);background:var(--blue);color:var(--sheet);border-radius:var(--r);padding:9px 16px;font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--blue)}
+
+/* Crit desk */
+.desk{border-left:1px solid var(--rule);background:var(--sheet);display:grid;grid-template-rows:auto 1fr;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;border:0;background:transparent;padding:12px 6px;font:600 13px var(--f-body);color:var(--ink-3);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--lamp)}
+.pane{overflow-y:auto;padding:16px;padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px;min-width:0}
+.pane h3{margin:0;font:700 17px/1.25 var(--f-display);text-wrap:balance}
+.lbl{font:500 10.5px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.quote{border-left:2px solid var(--rule);padding-left:10px;color:var(--ink-2);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.kindtag{align-self:flex-start;font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--lamp-soft);color:var(--lamp-ink)}
+.kindtag.correction{background:color-mix(in srgb,var(--bad) 14%,var(--sheet));color:var(--bad)}
+.kindtag.confirm{background:color-mix(in srgb,var(--ok) 14%,var(--sheet));color:var(--ok)}
+.body-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.refs{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.refs li{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--paper)}
+.refs .src{font:500 13px var(--f-mono);color:var(--blue)}
+.refs .note{font-size:13px;color:var(--ink-2)}
+.qa{display:flex;flex-direction:column;gap:10px}
+.qa .q{font-weight:600}
+.qa .a{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink-2);border-left:2px solid var(--lamp);padding-left:10px}
+.ask{display:flex;gap:8px}
+.ask input{flex:1;min-width:0;border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:8px 10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.list{display:flex;flex-direction:column;gap:6px}
+.list button.item{display:flex;gap:8px;align-items:flex-start;text-align:left;border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:8px 10px}
+.list button.item.lit{border-color:var(--lamp);background:var(--lamp-soft)}
+.list .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--rule)}
+.list .lit .dot{background:var(--lamp)}
+.muted{color:var(--ink-3);font-size:13px}
+.topic-group{display:flex;flex-direction:column;gap:6px}
+.topic-group h4{margin:0;font:700 14px var(--f-display);color:var(--blue)}
+.facts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.search{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:8px 10px;width:100%}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choices button{text-align:left;border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:9px 12px}
+.choices button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--sheet))}
+.choices button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--sheet))}
+.choices button:disabled{cursor:default;color:var(--ink)}
+.score{font:500 13px var(--f-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.notice{font-size:13px;color:var(--ink-2);background:var(--sheet-2);border-radius:6px;padding:8px 10px}
+
+@media (max-width:860px){
+  main.split{grid-template-columns:minmax(0,1fr)}
+  .desk{position:fixed;inset:0;top:auto;height:82%;z-index:20;border-left:0;border-top:1px solid var(--rule);border-radius:14px 14px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.18);transform:translateY(105%);transition:transform .25s ease;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .desk.open{transform:none}
+  .desk-toggle{display:block}
+  .who{display:none}
+  .stream{padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .composer{padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Crit Room</h1>
+      <p id="sub">Architecture &amp; construction study chat · ARE / IBC / IRC</p>
+    </div>
+    <div class="who" id="who" aria-label="People in this room"></div>
+    <button class="desk-toggle" id="deskToggle" type="button">Desk</button>
+    <button class="bulb-btn" id="bulb" type="button" aria-label="Light bulb: open the latest insight" title="Light bulb">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="glass" d="M12 2.6a6.6 6.6 0 0 0-3.9 11.9c.8.6 1.2 1.4 1.2 2.3v.6h5.4v-.6c0-.9.4-1.7 1.2-2.3A6.6 6.6 0 0 0 12 2.6Z"/><rect class="base" x="9.3" y="18.2" width="5.4" height="1.6" rx=".6"/><rect class="base" x="10" y="20.4" width="4" height="1.4" rx=".6"/></svg>
+      <span class="count" id="bulbCount" hidden>0</span>
+    </button>
+  </header>
+
+  <main class="split">
+    <section class="chat" aria-label="Conversation">
+      <div class="stream" id="stream" aria-live="polite">
+        <div class="status" id="status">Opening the room…</div>
+      </div>
+      <form class="composer" id="composer">
+        <div class="kinds" role="group" aria-label="Message type">
+          <button type="button" id="kNote" aria-pressed="true">I learned…</button>
+          <button type="button" id="kQ" class="qk" aria-pressed="false">Question</button>
+          <span class="hint">Enter to send · Shift+Enter new line</span>
+        </div>
+        <div class="row">
+          <textarea id="input" rows="2" placeholder="Share something you learned about architecture or construction…" aria-label="Message"></textarea>
+          <button class="btn" id="send" type="submit">Send</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="desk" id="desk" aria-label="Crit desk">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tBulb" aria-selected="true" type="button">Bulb</button>
+        <button role="tab" id="tMem" aria-selected="false" type="button">What we learned</button>
+        <button role="tab" id="tQuiz" aria-selected="false" type="button">Exam quiz</button>
+      </div>
+      <div class="pane" id="pane"></div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const BULB_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="glass" d="M12 2.6a6.6 6.6 0 0 0-3.9 11.9c.8.6 1.2 1.4 1.2 2.3v.6h5.4v-.6c0-.9.4-1.7 1.2-2.3A6.6 6.6 0 0 0 12 2.6Z"/><rect fill="currentColor" x="9.3" y="18.2" width="5.4" height="1.6" rx=".6"/><rect fill="currentColor" x="10" y="20.4" width="4" height="1.4" rx=".6"/></svg>';
+
+  const S = {
+    db: null, user: null, sample: null, uid: null,
+    msgs: [], memory: [], seen: {}, seenLoaded: false, profiles: {},
+    canWrite: true, kind: 'note', tab: 'bulb', openId: null,
+    quiz: null, quizBusy: false, score: { right: 0, total: 0 }, memFilter: '',
+    loaded: false, asking: null,
+  };
+
+  // ---------- helpers ----------
+  const fmtTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const fmtDay = (ts) => {
+    const d = new Date(ts), t = new Date();
+    const y = new Date(); y.setDate(t.getDate() - 1);
+    if (d.toDateString() === t.toDateString()) return 'Today';
+    if (d.toDateString() === y.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === t.getFullYear() ? undefined : 'numeric' });
+  };
+  const nameOf = (id) => (id && S.profiles[id] && S.profiles[id].name) || (id && id === S.uid ? 'You' : 'Someone');
+  const avatarOf = (id) => (id && S.profiles[id] && S.profiles[id].avatarUrl) || '';
+  const isLit = (m) => m.insight && m.insight.state === 'ready' && S.seenLoaded && !S.seen[m.id];
+  const litMsgs = () => S.msgs.filter(isLit);
+  const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+  // ---------- profiles ----------
+  async function resolveProfiles() {
+    if (!S.user) return;
+    const ids = [...new Set(S.msgs.map(m => m.author).filter(Boolean).concat(S.uid ? [S.uid] : []))];
+    const missing = ids.filter(id => !S.profiles[id]);
+    if (!missing.length) return;
+    try { Object.assign(S.profiles, await S.user.profiles(ids)); } catch (e) {}
+    renderWho(); renderStream(); renderPane();
+  }
+  function renderWho() {
+    const w = $('who'); w.textContent = '';
+    const ids = [...new Set(S.msgs.map(m => m.author).filter(Boolean))].slice(-5);
+    ids.forEach(id => { const src = avatarOf(id); if (!src) return; const i = el('img'); i.src = src; i.alt = nameOf(id); i.title = nameOf(id); w.appendChild(i); });
+  }
+
+  // ---------- stream ----------
+  function renderStream() {
+    const s = $('stream');
+    const atBottom = s.scrollHeight - s.scrollTop - s.clientHeight < 80;
+    s.textContent = '';
+    if (!S.loaded) { s.appendChild(el('div', 'status', S.statusText || 'Opening the room…')); return; }
+    if (!S.msgs.length) { s.appendChild(emptyState()); return; }
+    if (S.statusText) s.appendChild(el('div', 'status', S.statusText));
+    let lastDay = '';
+    for (const m of S.msgs) {
+      const day = fmtDay(m.ts);
+      if (day !== lastDay) { s.appendChild(el('div', 'day', day)); lastDay = day; }
+      const row = el('article', 'msg' + (m.author === S.uid ? ' mine' : '') + (m.kind === 'question' ? ' question' : ''));
+      const av = el('img', 'av'); av.alt = ''; const src = avatarOf(m.author); if (src) av.src = src;
+      const b = el('div', 'bubble');
+      const meta = el('div', 'meta');
+      meta.appendChild(el('b', null, nameOf(m.author)));
+      meta.appendChild(el('span', null, fmtTime(m.ts)));
+      if (m.kind === 'question') meta.appendChild(el('span', 'chip q', 'Question'));
+      if (m.insight && m.insight.topic) meta.appendChild(el('span', 'chip topic', m.insight.topic));
+      b.appendChild(meta);
+      b.appendChild(el('div', 'text', m.text));
+      const ins = m.insight;
+      if (ins && (ins.state === 'pending' || ins.state === 'ready')) {
+        const mb = el('button', 'mini-bulb' + (isLit(m) ? ' lit' : '') + (ins.state === 'pending' ? ' pending' : ''));
+        mb.type = 'button';
+        mb.innerHTML = BULB_SVG;
+        const label = ins.state === 'pending' ? 'Thinking…' : (ins.headline || 'Insight');
+        mb.appendChild(el('span', null, label));
+        if (ins.state === 'ready') mb.onclick = () => openInsight(m.id);
+        else mb.disabled = true;
+        b.appendChild(mb);
+      }
+      row.append(av, b);
+      s.appendChild(row);
+    }
+    if (atBottom || S.forceScroll) { s.scrollTop = s.scrollHeight; S.forceScroll = false; }
+  }
+  function emptyState() {
+    const box = el('div', 'empty');
+    box.appendChild(el('h2', null, 'Start the crit'));
+    box.appendChild(el('p', null, 'Post something you learned today, or a question you have. Your friend can answer or keep the thread going. When the bulb lights up, Claude has a correction, an addition or a code/book reference for you.'));
+    const sg = el('div', 'sugg');
+    sg.appendChild(el('div', 'lbl', 'Try one of these to begin'));
+    [
+      ['note', 'Learned today: the max exit access travel distance in a sprinklered B occupancy is 300 ft.'],
+      ['question', 'When is a second exit required from a story? Is it based on occupant load or travel distance?'],
+      ['note', 'Concrete reaches about 70% of its 28-day strength after 7 days of curing.'],
+    ].forEach(([k, t]) => { const bt = el('button', null, t); bt.type = 'button'; bt.onclick = () => { setKind(k); $('input').value = t; $('input').focus(); }; sg.appendChild(bt); });
+    box.appendChild(sg);
+    return box;
+  }
+
+  // ---------- bulb ----------
+  function renderBulb() {
+    const lit = litMsgs();
+    const pending = S.msgs.some(m => m.insight && m.insight.state === 'pending');
+    const b = $('bulb');
+    b.classList.toggle('lit', lit.length > 0);
+    b.classList.toggle('thinking', pending && !lit.length);
+    const c = $('bulbCount'); c.hidden = lit.length < 2; c.textContent = lit.length;
+    b.setAttribute('aria-label', lit.length ? `Light bulb is on: ${lit.length} new insight${lit.length > 1 ? 's' : ''}` : 'Light bulb is off: open insights');
+  }
+  $('bulb').onclick = () => {
+    const lit = litMsgs();
+    if (lit.length) openInsight(lit[0].id); else { S.openId = null; setTab('bulb'); }
+    openDesk();
+  };
+  async function markSeen(id) {
+    if (!id || S.seen[id]) return;
+    S.seen = Object.assign({}, S.seen, { [id]: true });
+    renderBulb(); renderStream();
+    if (S.db && S.uid) { try { await S.db.doc('data/users/' + S.uid + '/state').set({ seen: S.seen }); } catch (e) {} }
+  }
+  function openInsight(id) { S.openId = id; setTab('bulb'); openDesk(); markSeen(id); }
+
+  // ---------- desk ----------
+  function openDesk() { $('desk').classList.add('open'); }
+  $('deskToggle').onclick = () => $('desk').classList.toggle('open');
+  function setTab(t) {
+    S.tab = t;
+    [['bulb', 'tBulb'], ['mem', 'tMem'], ['quiz', 'tQuiz']].forEach(([k, id]) => $(id).setAttribute('aria-selected', String(k === t)));
+    renderPane();
+  }
+  $('tBulb').onclick = () => setTab('bulb');
+  $('tMem').onclick = () => setTab('mem');
+  $('tQuiz').onclick = () => setTab('quiz');
+
+  function renderPane() {
+    const p = $('pane');
+    // keep focus/typing in the ask box across re-renders
+    const askVal = $('askInput') ? $('askInput').value : '';
+    const askFocus = document.activeElement && document.activeElement.id === 'askInput';
+    const searchFocus = document.activeElement && document.activeElement.id === 'memSearch';
+    p.textContent = '';
+    if (S.tab === 'bulb') renderBulbPane(p);
+    else if (S.tab === 'mem') renderMemPane(p);
+    else renderQuizPane(p);
+    if ($('askInput')) { $('askInput').value = askVal; if (askFocus) $('askInput').focus(); }
+    if (searchFocus && $('memSearch')) { const s = $('memSearch'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+  }
+
+  function renderBulbPane(p) {
+    const m = S.msgs.find(x => x.id === S.openId);
+    if (!m || !m.insight || m.insight.state !== 'ready') {
+      p.appendChild(el('h3', null, 'The bulb'));
+      p.appendChild(el('p', 'muted', 'Claude reads along as you talk. When it can correct a statement, add something useful, answer an open question or point to a code section or book chapter, the bulb lights up. Open it to read the note, then ask a follow-up about it.'));
+      const withIns = S.msgs.filter(x => x.insight && x.insight.state === 'ready').slice().reverse();
+      if (withIns.length) {
+        p.appendChild(el('div', 'lbl', 'Insights'));
+        const list = el('div', 'list');
+        withIns.slice(0, 40).forEach(x => {
+          const b = el('button', 'item' + (isLit(x) ? ' lit' : '')); b.type = 'button';
+          b.appendChild(el('span', 'dot'));
+          const t = el('span'); t.appendChild(el('div', null, x.insight.headline || 'Insight'));
+          t.appendChild(el('div', 'muted', `${nameOf(x.author)} · ${fmtDay(x.ts)} ${fmtTime(x.ts)}`));
+          b.appendChild(t); b.onclick = () => openInsight(x.id); list.appendChild(b);
+        });
+        p.appendChild(list);
+      } else p.appendChild(el('p', 'notice', 'No insights yet. They appear here after messages are posted.'));
+      if (!S.sample) p.appendChild(el('p', 'notice', 'The bulb needs Claude access in this view. Open the room signed in to claude.ai to turn it on.'));
+      return;
+    }
+    const ins = m.insight;
+    const back = el('button', 'btn ghost', '← All insights'); back.type = 'button'; back.style.alignSelf = 'flex-start';
+    back.onclick = () => { S.openId = null; renderPane(); };
+    p.appendChild(back);
+    const kindLabel = { correction: 'Correction', addition: 'Adds to this', answer: 'Answer', reference: 'Where to read', confirm: 'Correct' }[ins.kind] || 'Insight';
+    p.appendChild(el('span', 'kindtag ' + (ins.kind || ''), kindLabel));
+    p.appendChild(el('h3', null, ins.headline || 'Insight'));
+    p.appendChild(el('div', 'lbl', `On ${nameOf(m.author)}'s ${m.kind === 'question' ? 'question' : 'note'}`));
+    p.appendChild(el('div', 'quote', m.text));
+    if (ins.correct) { p.appendChild(el('div', 'lbl', 'Correct statement')); p.appendChild(el('div', 'body-text', ins.correct)); }
+    if (ins.comment) { p.appendChild(el('div', 'lbl', 'Comment')); p.appendChild(el('div', 'body-text', ins.comment)); }
+    if (Array.isArray(ins.refs) && ins.refs.length) {
+      p.appendChild(el('div', 'lbl', 'Read more'));
+      const ul = el('ul', 'refs');
+      ins.refs.forEach(r => { const li = el('li'); li.appendChild(el('div', 'src', [r.source, r.where].filter(Boolean).join(' · '))); if (r.note) li.appendChild(el('div', 'note', r.note)); ul.appendChild(li); });
+      p.appendChild(ul);
+      p.appendChild(el('p', 'muted', 'Section numbers follow the 2021 I-Codes unless noted. Check your exam’s code edition.'));
+    }
+    const qa = Object.entries(m.qa || {}).map(([k, v]) => Object.assign({ k }, v)).sort((a, b) => a.ts - b.ts);
+    if (qa.length || S.asking) {
+      p.appendChild(el('div', 'lbl', 'Follow-ups'));
+      const box = el('div', 'qa');
+      qa.forEach(x => { box.appendChild(el('div', 'q', `${nameOf(x.by)}: ${x.q}`)); box.appendChild(el('div', 'a', x.a)); });
+      if (S.asking && S.asking.mid === m.id) { box.appendChild(el('div', 'q', `You: ${S.asking.q}`)); box.appendChild(el('div', 'a', S.asking.a || 'Thinking…')); }
+      p.appendChild(box);
+    }
+    if (S.sample) {
+      const f = el('form', 'ask');
+      const inp = el('input'); inp.id = 'askInput'; inp.placeholder = 'Ask about this idea…'; inp.setAttribute('aria-label', 'Ask a follow-up about this insight');
+      const b = el('button', 'btn', 'Ask'); b.type = 'submit'; b.disabled = !!S.asking;
+      f.append(inp, b);
+      f.onsubmit = (e) => { e.preventDefault(); const q = inp.value.trim(); if (q) { inp.value = ''; askFollowUp(m, q); } };
+      p.appendChild(f);
+    }
+    const acts = el('div', 'actions');
+    const off = el('button', 'btn ghost', 'Turn bulb off'); off.type = 'button';
+    off.onclick = () => { markSeen(m.id); const next = litMsgs()[0]; S.openId = next ? next.id : null; if (next) markSeen(next.id); renderPane(); };
+    acts.appendChild(off);
+    p.appendChild(acts);
+  }
+
+  function renderMemPane(p) {
+    p.appendChild(el('h3', null, 'What we learned'));
+    p.appendChild(el('p', 'muted', 'Claude pulls the key facts out of your conversation and files them by topic. They are verified or corrected first, so this doubles as a study sheet.'));
+    const s = el('input', 'search'); s.id = 'memSearch'; s.placeholder = 'Filter facts (e.g. egress, rebar, R-value)'; s.value = S.memFilter; s.setAttribute('aria-label', 'Filter facts');
+    s.oninput = () => { S.memFilter = s.value; renderPane(); };
+    p.appendChild(s);
+    const f = S.memFilter.trim().toLowerCase();
+    const facts = S.memory.filter(x => !f || (x.fact + ' ' + x.topic).toLowerCase().includes(f));
+    if (!facts.length) { p.appendChild(el('p', 'notice', S.memory.length ? 'Nothing matches that filter.' : 'Nothing filed yet. Facts appear here as you chat.')); return; }
+    const groups = {};
+    facts.forEach(x => { (groups[x.topic || 'General'] = groups[x.topic || 'General'] || []).push(x); });
+    Object.keys(groups).sort().forEach(t => {
+      const g = el('div', 'topic-group');
+      g.appendChild(el('h4', null, `${t} (${groups[t].length})`));
+      const ul = el('ul', 'facts');
+      groups[t].forEach(x => { const li = el('li', null, x.fact); if (x.ref) { li.appendChild(el('span', 'muted', ' — ' + x.ref)); } ul.appendChild(li); });
+      g.appendChild(ul); p.appendChild(g);
+    });
+  }
+
+  function renderQuizPane(p) {
+    p.appendChild(el('h3', null, 'Exam quiz'));
+    p.appendChild(el('p', 'muted', 'Multiple-choice questions in the style of the ARE, built from what the two of you have discussed. Your score is just for you.'));
+    if (S.score.total) p.appendChild(el('div', 'score', `Score this session: ${S.score.right} / ${S.score.total}`));
+    if (!S.sample) { p.appendChild(el('p', 'notice', 'The quiz needs Claude access in this view.')); return; }
+    const q = S.quiz;
+    if (q && q.error) p.appendChild(el('p', 'notice', q.error));
+    if (q && q.question) {
+      if (q.topic) p.appendChild(el('span', 'chip topic', q.topic));
+      p.appendChild(el('div', 'body-text', q.question));
+      const ch = el('div', 'choices');
+      q.choices.forEach((c, i) => {
+        const b = el('button', null, `${'ABCD'[i]}. ${c}`); b.type = 'button';
+        if (q.picked != null) { b.disabled = true; if (i === q.answer) b.classList.add('right'); else if (i === q.picked) b.classList.add('wrong'); }
+        b.onclick = () => { if (q.picked != null) return; q.picked = i; S.score.total++; if (i === q.answer) S.score.right++; renderPane(); };
+        ch.appendChild(b);
+      });
+      p.appendChild(ch);
+      if (q.picked != null) {
+        p.appendChild(el('div', 'lbl', q.picked === q.answer ? 'Correct' : 'Not quite'));
+        p.appendChild(el('div', 'body-text', q.explanation || ''));
+        if (q.reference) p.appendChild(el('div', 'refs', null)).appendChild(el('div', 'src', q.reference));
+      }
+    }
+    const b = el('button', 'btn', S.quizBusy ? 'Writing a question…' : (q && q.question ? 'Next question' : 'Quiz me')); b.type = 'button'; b.disabled = S.quizBusy;
+    b.onclick = makeQuiz; b.style.alignSelf = 'flex-start';
+    p.appendChild(b);
+  }
+
+  // ---------- composer ----------
+  function setKind(k) {
+    S.kind = k;
+    $('kNote').setAttribute('aria-pressed', String(k === 'note'));
+    $('kQ').setAttribute('aria-pressed', String(k === 'question'));
+    $('input').placeholder = k === 'question' ? 'Ask your friend (and Claude) a question…' : 'Share something you learned about architecture or construction…';
+  }
+  $('kNote').onclick = () => setKind('note');
+  $('kQ').onclick = () => setKind('question');
+  $('input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('composer').requestSubmit(); } });
+  $('input').addEventListener('input', () => { const t = $('input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px'; });
+  $('composer').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('input').value.trim();
+    if (!text) return;
+    if (!S.db) { S.statusText = 'The room isn’t connected yet. Open it signed in to claude.ai.'; renderStream(); return; }
+    if (!S.canWrite) return;
+    $('send').disabled = true;
+    const id = rid();
+    const doc = { text: text.slice(0, 4000), kind: S.kind, author: S.uid, ts: Date.now(), insight: { state: S.sample ? 'pending' : 'none' } };
+    try {
+      await S.db.collection('messages').doc(id).set(doc);
+      $('input').value = ''; $('input').style.height = 'auto'; setKind('note');
+      S.forceScroll = true;
+      if (S.sample) analyze(id, doc);
+    } catch (err) {
+      S.statusText = err && err.code === 'quota_exceeded' ? 'The room’s storage is full. Ask the owner to clear old messages.' : (err && err.code === 'invalid_argument' ? 'You have view-only access. Ask the owner for Contributor access to post.' : 'Couldn’t send. Check your connection and try again.');
+      if (err && err.code === 'invalid_argument') { S.canWrite = false; applyWrite(); }
+      renderStream();
+    } finally { $('send').disabled = !S.canWrite; }
+  });
+  function applyWrite() {
+    $('input').disabled = !S.canWrite; $('send').disabled = !S.canWrite;
+    if (!S.canWrite) $('input').placeholder = 'You can read this room. Ask the owner for Contributor access to post.';
+  }
+
+  // ---------- Claude ----------
+  const SYSTEM = `You are the quiet third member of "Crit Room", a study chat where two friends preparing for architecture licensing exams (ARE-style; US codes such as IBC and IRC, ADA/ICC A117.1, NFPA, ASCE 7, plus general building technology, structures, construction documents, project management and practice) post what they learn and ask each other questions.
+You do NOT reply in the chat. You decide whether to switch on a light bulb with a short, useful note.
+Switch it on ("bulb": true) when at least one is true:
+- the latest message states something wrong, outdated, or imprecise (kind "correction"; give the correct statement);
+- it is a question that the conversation has not answered correctly yet (kind "answer");
+- there is an important caveat, exception or related rule worth adding (kind "addition");
+- a specific code section, standard, or book chapter would help them study it (kind "reference").
+- a statement is right and worth reinforcing for the exam, only if you can add a precise reference (kind "confirm").
+Otherwise "bulb": false (small talk, already-answered points, nothing to add). Don't flood: prefer false for trivial messages.
+References: cite code sections as e.g. "IBC 2021 §1017.2" / "Table 1017.2", standards like "ASCE 7-22 Ch. 26", and books by title + chapter (e.g. "Ching, Building Construction Illustrated, 6th ed., Ch. 5", "Allen & Iano, Fundamentals of Building Construction, Ch. 13", "Architect's Handbook of Professional Practice", "Mehta, Building Construction: Principles, Materials & Systems", "Ambrose, Simplified Engineering for Architects and Builders"). Give a page number ONLY if you are confident; otherwise give chapter/section. Never invent section numbers you are unsure of; say "see IBC Chapter 10" instead.
+Also extract 0-3 durable study facts the conversation established (already corrected if needed), each one sentence, with a short topic name (e.g. "Egress", "Fire-resistance", "Accessibility", "Concrete", "Structures", "Envelope", "MEP", "Contracts", "Zoning"). Skip facts already in the memory list.
+Reply with JSON only:
+{"bulb":boolean,"kind":"correction|answer|addition|reference|confirm","topic":"short topic","headline":"max 8 words","correct":"the correct statement, only for corrections or answers, else empty","comment":"2-5 sentences, plain and specific","refs":[{"source":"code/book","where":"section/chapter/page","note":"what to read there"}],"facts":[{"fact":"...","topic":"...","ref":"optional short ref"}]}`;
+
+  function transcript(upToId, n) {
+    const idx = S.msgs.findIndex(m => m.id === upToId);
+    const list = (idx >= 0 ? S.msgs.slice(0, idx + 1) : S.msgs).slice(-n);
+    return list.map(m => `[${nameOf(m.author)}${m.kind === 'question' ? ' asks' : ''}] ${m.text}`).join('\n');
+  }
+  const memoryText = () => S.memory.slice(-80).map(x => `- (${x.topic}) ${x.fact}`).join('\n') || '(empty)';
+
+  async function analyze(id, doc) {
+    const ref = S.db.collection('messages').doc(id);
+    try {
+      // wait a tick so the new message is in S.msgs for the transcript
+      await new Promise(r => setTimeout(r, 300));
+      let convo = transcript(id, 20);
+      if (!convo.includes(doc.text)) convo += `\n[${nameOf(doc.author)}${doc.kind === 'question' ? ' asks' : ''}] ${doc.text}`;
+      const input = `${SYSTEM}\n\nMEMORY (facts already filed):\n${memoryText()}\n\nRECENT CONVERSATION (oldest first; the LAST line is the new message to judge):\n${convo}`;
+      const r = await S.sample.json(input, { modelTier: 'default' });
+      const out = r && typeof r === 'object' ? r : {};
+      const refs = Array.isArray(out.refs) ? out.refs.slice(0, 4).map(x => ({ source: String(x.source || '').slice(0, 160), where: String(x.where || '').slice(0, 120), note: String(x.note || '').slice(0, 300) })) : [];
+      const insight = out.bulb ? {
+        state: 'ready', kind: String(out.kind || 'addition'), topic: String(out.topic || '').slice(0, 40),
+        headline: String(out.headline || 'Insight').slice(0, 90), correct: String(out.correct || '').slice(0, 800),
+        comment: String(out.comment || '').slice(0, 1500), refs, ts: Date.now(),
+      } : { state: 'none', topic: String(out.topic || '').slice(0, 40) };
+      await ref.update({ insight });
+      const known = new Set(S.memory.map(x => x.fact.toLowerCase()));
+      const facts = Array.isArray(out.facts) ? out.facts.slice(0, 3) : [];
+      for (const f of facts) {
+        const fact = String(f && f.fact || '').trim().slice(0, 400);
+        if (!fact || known.has(fact.toLowerCase())) continue;
+        known.add(fact.toLowerCase());
+        try { await S.db.collection('memory').doc(rid()).set({ fact, topic: String(f.topic || out.topic || 'General').slice(0, 40), ref: String(f.ref || '').slice(0, 120), fromMsg: id, by: S.uid, ts: Date.now() }); } catch (e) {}
+      }
+    } catch (err) {
+      try { await ref.update({ insight: { state: 'none' } }); } catch (e) {}
+      if (err && err.code === 'not_granted') { S.sample = null; renderPane(); }
+    }
+  }
+
+  async function askFollowUp(m, q) {
+    if (!S.sample || S.asking) return;
+    S.asking = { mid: m.id, q, a: '' };
+    renderPane();
+    const ins = m.insight;
+    const prior = Object.values(m.qa || {}).sort((a, b) => a.ts - b.ts).map(x => `Q: ${x.q}\nA: ${x.a}`).join('\n\n');
+    const prompt = `You are the study assistant in "Crit Room", an architecture & construction exam-prep chat (ARE; IBC/IRC and related standards). Earlier you lit a light bulb with this note.\n\nMESSAGE: ${m.text}\nYOUR NOTE: ${ins.headline}\n${ins.correct ? 'Correct statement: ' + ins.correct + '\n' : ''}${ins.comment}\nReferences: ${(ins.refs || []).map(r => r.source + ' ' + r.where).join('; ') || 'none'}\n\nRECENT CONVERSATION:\n${transcript(m.id, 12)}\n\n${prior ? 'EARLIER FOLLOW-UPS:\n' + prior + '\n\n' : ''}${nameOf(S.uid)} now asks: ${q}\n\nAnswer in plain text, 3-8 sentences, exam-focused. Cite code sections or book chapters when you are confident; do not invent page numbers. Keep it to architecture and construction.`;
+    try {
+      const r = await S.sample(prompt, { cache: false, onText: ({ text }) => { if (S.asking) { S.asking.a = text; renderPane(); } } });
+      const a = (r && r.text || '').trim().slice(0, 4000);
+      await S.db.collection('messages').doc(m.id).update({ qa: { [rid()]: { q: q.slice(0, 500), a, by: S.uid, ts: Date.now() } } });
+    } catch (err) {
+      if (err && err.code === 'not_granted') S.sample = null;
+      S.asking = null; renderPane();
+      const p = $('pane'); p.appendChild(el('p', 'notice', err && err.code === 'rate_limited' ? 'Claude is busy. Try again in a minute.' : 'Couldn’t get an answer. Try again.'));
+      return;
+    }
+    S.asking = null; renderPane();
+  }
+
+  async function makeQuiz() {
+    if (!S.sample || S.quizBusy) return;
+    S.quizBusy = true; renderPane();
+    const recentTopics = [...new Set(S.msgs.slice(-40).map(m => m.insight && m.insight.topic).filter(Boolean))].join(', ');
+    const prompt = `Write ONE multiple-choice question in the style of the NCARB Architect Registration Examination (ARE 5.0) for two friends studying together. Base it on what they have been studying:\nFACTS THEY FILED:\n${memoryText()}\nRECENT TOPICS: ${recentTopics || '(none yet: pick a common ARE topic such as egress, fire-resistance, accessibility, structural loads, building envelope or contracts)'}\nRECENT CONVERSATION:\n${transcript(null, 15) || '(none)'}\n${S.quiz && S.quiz.question ? 'Avoid repeating this previous question: ' + S.quiz.question : ''}\nUse 2021 I-Codes where codes apply. Exactly 4 choices, one correct, plausible distractors. Reply with JSON only: {"topic":"short","question":"...","choices":["","","",""],"answer":0,"explanation":"2-4 sentences on why","reference":"code section or book chapter"}`;
+    try {
+      const q = await S.sample.json(prompt, { cache: false });
+      if (!q || !Array.isArray(q.choices) || q.choices.length !== 4) throw { code: 'bad' };
+      S.quiz = { topic: String(q.topic || ''), question: String(q.question || ''), choices: q.choices.map(String), answer: Math.max(0, Math.min(3, Number(q.answer) || 0)), explanation: String(q.explanation || ''), reference: String(q.reference || ''), picked: null };
+    } catch (err) {
+      if (err && err.code === 'not_granted') S.sample = null;
+      S.quiz = { error: err && err.code === 'rate_limited' ? 'Claude is busy. Try again in a minute.' : 'Couldn’t write a question. Try again.' };
+    }
+    S.quizBusy = false; renderPane();
+  }
+
+  // ---------- boot ----------
+  renderPane(); renderBulb();
+  const use = (n) => (window.claude && window.claude.use) ? window.claude.use(n).catch(() => null) : Promise.resolve(null);
+  (async () => {
+    const [db, user, sample] = await Promise.all([use('db'), use('user'), use('sample')]);
+    S.db = db; S.user = user; S.sample = sample;
+    if (!db) { S.loaded = true; S.statusText = 'The shared room needs you to be signed in to claude.ai. Open this page from your claude.ai link.'; renderStream(); S.canWrite = false; applyWrite(); renderPane(); return; }
+    if (user) {
+      try { S.uid = await user.id(); } catch (e) {}
+      try { const c = await user.can('data.write'); if (c === false) { S.canWrite = false; applyWrite(); } } catch (e) {}
+    }
+    renderPane();
+    let timer = setTimeout(() => { if (!S.loaded) { S.loaded = true; S.statusText = 'Still connecting to the room. Messages will appear when it answers.'; renderStream(); } }, 10000);
+    db.collection('messages').orderBy('ts', 'desc').limit(500).onSnapshot((snap) => {
+      S.msgs = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(m => typeof m.ts === 'number').reverse();
+      if (!snap.metadata.fromCache) { clearTimeout(timer); S.loaded = true; if (S.statusText && S.statusText.startsWith('Still')) S.statusText = ''; }
+      else if (S.msgs.length) S.loaded = true;
+      renderStream(); renderBulb(); renderPane(); resolveProfiles(); renderWho();
+    }, () => { clearTimeout(timer); S.loaded = true; S.statusText = 'Lost the connection to the room. Reload the page to reconnect.'; renderStream(); });
+    db.collection('memory').orderBy('ts', 'asc').limit(1000).onSnapshot((snap) => {
+      S.memory = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).filter(x => x.fact);
+      if (S.tab === 'mem') renderPane();
+    }, () => {});
+    if (S.uid) {
+      db.doc('data/users/' + S.uid + '/state').onSnapshot((d) => {
+        const data = d.exists ? d.data() : null;
+        S.seen = Object.assign({}, (data && data.seen) || {}, S.seen);
+        S.seenLoaded = true; renderBulb(); renderStream(); if (S.tab === 'bulb') renderPane();
+      }, () => { S.seenLoaded = true; renderBulb(); });
+    } else { S.seenLoaded = true; }
+  })();
+})();
+</script>
