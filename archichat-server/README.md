@@ -43,13 +43,13 @@ The blueprint uses the Starter plan (about US$7/month) because the free plan wip
 
 Any other Node host works too (Railway, Fly.io, a VPS). Give it `npm install`, `npm start`, the two variables above, and a persistent folder for `DATA_DIR`.
 
-## Use your own domain (for example `archichat.mx`)
+## Use your own domain: archichat.app
 
-1. Buy the domain from a registrar. It must be a real domain ending such as `.mx`, `.com`, `.app` or `.us`. `.tx` does not exist and can't be bought.
-2. In Render: your service > **Settings > Custom Domains > Add**, type the domain (for example `archichat.mx`, and also `www.archichat.mx`).
-3. Render shows the DNS records to add. At your registrar, add them (usually an `A` record for `archichat.mx` and a `CNAME` for `www`).
-4. Wait for DNS (minutes to a few hours). Render issues the HTTPS certificate automatically. Typing the domain in Chrome then opens ArchiChat.
+1. Buy `archichat.app` from a registrar (Namecheap, Porkbun, Cloudflare, GoDaddy and others sell `.app`, roughly US$15/year).
+2. In Render: your service > **Settings > Custom Domains > Add**, add `archichat.app` and `www.archichat.app`.
+3. Render shows the DNS records to add. At your registrar, add them (usually an `A` record for `archichat.app` and a `CNAME` for `www`).
+4. Wait for DNS (minutes to a few hours). Render issues the HTTPS certificate automatically. `.app` domains only open over HTTPS, so wait until Render shows the certificate as issued. Typing `archichat.app` in Chrome then opens ArchiChat.
 
 ## Invite a friend
 
-Send them the address and the room code. They pick a name and they're in. If they use the same name next time, they get their history and their bulb state back.
+Send them `https://archichat.app` and the room code. They pick a name and they're in. If they use the same name next time, they get their history and their bulb state back.

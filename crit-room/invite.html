@@ -32,7 +32,7 @@ button,input,textarea{font:inherit;color:inherit}
 .field{display:flex;flex-direction:column;gap:6px}
 .lbl{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
 .box{display:flex;gap:8px;align-items:stretch}
-.val{flex:1;min-width:0;border:1px solid var(--rule);border-radius:8px;background:var(--paper);padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+.val{flex:1;font:inherit;color:inherit;min-width:0;border:1px solid var(--rule);border-radius:8px;background:var(--paper);padding:10px 12px;overflow-wrap:anywhere;user-select:all}
 .val.big{font:700 20px/1.2 var(--f-display)}
 .val.mono{font:500 14px/1.4 var(--f-mono);color:var(--blue)}
 textarea.val{resize:vertical;min-height:150px;user-select:text;line-height:1.5}
@@ -70,42 +70,43 @@ textarea.val{resize:vertical;min-height:150px;user-select:text;line-height:1.5}
     <div class="field">
       <span class="lbl" id="linkLbl">Page address</span>
       <div class="box">
-        <div class="val mono" id="link" aria-labelledby="linkLbl">https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk</div>
+        <div class="val mono" id="link" aria-labelledby="linkLbl">https://archichat.app</div>
         <button class="copy" type="button" data-copy="link" id="copyLink">Copy</button>
       </div>
-      <a class="open" href="https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk" target="_blank" rel="noopener">Open ArchiChat ↗</a>
+      <a class="open" href="https://archichat.app" target="_blank" rel="noopener">Open ArchiChat ↗</a>
+    </div>
+
+    <div class="field">
+      <label class="lbl" for="code">Room code (only you and your friends know it)</label>
+      <input class="val mono" id="code" autocomplete="off" placeholder="Type the room code you set on the server">
     </div>
 
     <div class="field">
       <label class="lbl" for="msg">Message for your friend (edit it if you like)</label>
       <div class="box msgbox">
-        <textarea class="val" id="msg">Hey! I set up ArchiChat, our study chat for architecture and construction (ARE / IBC / IRC).
-
-Open it here: https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk
-
-Sign in to claude.ai first. Post anything you learn or any question you have, and answer mine. When the light bulb turns on, Claude has a correction, an answer or a code/book reference for us. There's also an exam quiz tab.</textarea>
+        <textarea class="val" id="msg"></textarea>
         <button class="copy" type="button" data-copy="msg" id="copyMsg">Copy message</button>
       </div>
     </div>
 
-    <div class="tip"><b>Before you send it:</b> the link only works for people you've shared ArchiChat with. Do step 1 below first.</div>
+    <div class="tip"><b>Before you send it:</b> archichat.app only works once the app is online and the domain points to it. Do the steps under "You" first.</div>
 
     <div class="steps">
       <section>
         <h2>You</h2>
         <ol>
-          <li>Open ArchiChat and click <b>Share</b>.</li>
-          <li>Invite your friend <b>by email as Editor</b>. If they're in your claude.ai organization, <b>Contributor</b> also works.</li>
-          <li>Don't turn on a public link, or outside friends can only read.</li>
-          <li>Copy the message above and send it.</li>
+          <li>Deploy the app on Render and set your <b>room code</b> and <b>Claude API key</b>.</li>
+          <li>Buy <b>archichat.app</b> and add it in Render under <b>Custom Domains</b>.</li>
+          <li>Open archichat.app and check that it loads.</li>
+          <li>Type the room code above, copy the message and send it.</li>
         </ol>
       </section>
       <section>
         <h2>Your friend</h2>
         <ol>
-          <li>Sign in to claude.ai with the invited email.</li>
-          <li>Open the link and post a first message.</li>
-          <li>Click <b>Allow</b> when the page asks to use Claude. That turns on the bulb and the quiz.</li>
+          <li>Open archichat.app in any browser. No Claude account needed.</li>
+          <li>Type a name and the room code.</li>
+          <li>Use the same name every time to keep their history.</li>
         </ol>
       </section>
     </div>
@@ -113,10 +114,21 @@ Sign in to claude.ai first. Post anything you learn or any question you have, an
 </main>
 
 <script>
+const msgFor = (code) => `Hey! I set up ArchiChat, our study chat for architecture and construction (ARE / IBC / IRC).
+
+Open it here: https://archichat.app
+Room code: ${code || '(ask me for it)'}
+
+Type your name and the room code. Post anything you learn or any question you have, and answer mine. When the light bulb turns on, Claude has a correction, an answer or a code/book reference for us. There's also an exam quiz tab.`;
+const msgEl = document.getElementById('msg'), codeEl = document.getElementById('code');
+let edited = false;
+msgEl.value = msgFor('');
+msgEl.addEventListener('input', () => { edited = true; });
+codeEl.addEventListener('input', () => { if (!edited) msgEl.value = msgFor(codeEl.value.trim()); });
 document.querySelectorAll('.copy').forEach(btn => {
   btn.addEventListener('click', () => {
     const src = document.getElementById(btn.dataset.copy);
-    const text = 'value' in src && src.tagName === 'TEXTAREA' ? src.value : src.textContent.trim();
+    const text = src.tagName === 'TEXTAREA' || src.tagName === 'INPUT' ? src.value : src.textContent.trim();
     const label = btn.textContent;
     const ok = () => { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = label; btn.classList.remove('done'); }, 1600); };
     const fallback = () => {
