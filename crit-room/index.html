@@ -1,4 +1,4 @@
-<title>Crit Room</title>
+<title>ArchiChat</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -150,7 +150,7 @@ main.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:0}
 <div class="app">
   <header class="top">
     <div class="brand">
-      <h1>Crit Room</h1>
+      <h1>ArchiChat</h1>
       <p id="sub">Architecture &amp; construction study chat · ARE / IBC / IRC</p>
     </div>
     <div class="who" id="who" aria-label="People in this room"></div>
@@ -179,7 +179,7 @@ main.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:0}
       </form>
     </section>
 
-    <aside class="desk" id="desk" aria-label="Crit desk">
+    <aside class="desk" id="desk" aria-label="Study desk">
       <div class="tabs" role="tablist">
         <button role="tab" id="tBulb" aria-selected="true" type="button">Bulb</button>
         <button role="tab" id="tMem" aria-selected="false" type="button">What we learned</button>
@@ -274,7 +274,7 @@ main.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:0}
   }
   function emptyState() {
     const box = el('div', 'empty');
-    box.appendChild(el('h2', null, 'Start the crit'));
+    box.appendChild(el('h2', null, 'Start the conversation'));
     box.appendChild(el('p', null, 'Post something you learned today, or a question you have. Your friend can answer or keep the thread going. When the bulb lights up, Claude has a correction, an addition or a code/book reference for you.'));
     const sg = el('div', 'sugg');
     sg.appendChild(el('div', 'lbl', 'Try one of these to begin'));
@@ -484,7 +484,7 @@ main.split{display:grid;grid-template-columns:minmax(0,1fr) 380px;min-height:0}
   }
 
   // ---------- Claude ----------
-  const SYSTEM = `You are the quiet third member of "Crit Room", a study chat where two friends preparing for architecture licensing exams (ARE-style; US codes such as IBC and IRC, ADA/ICC A117.1, NFPA, ASCE 7, plus general building technology, structures, construction documents, project management and practice) post what they learn and ask each other questions.
+  const SYSTEM = `You are the quiet third member of "ArchiChat", a study chat where two friends preparing for architecture licensing exams (ARE-style; US codes such as IBC and IRC, ADA/ICC A117.1, NFPA, ASCE 7, plus general building technology, structures, construction documents, project management and practice) post what they learn and ask each other questions.
 You do NOT reply in the chat. You decide whether to switch on a light bulb with a short, useful note.
 Switch it on ("bulb": true) when at least one is true:
 - the latest message states something wrong, outdated, or imprecise (kind "correction"; give the correct statement);
@@ -542,7 +542,7 @@ Reply with JSON only:
     renderPane();
     const ins = m.insight;
     const prior = Object.values(m.qa || {}).sort((a, b) => a.ts - b.ts).map(x => `Q: ${x.q}\nA: ${x.a}`).join('\n\n');
-    const prompt = `You are the study assistant in "Crit Room", an architecture & construction exam-prep chat (ARE; IBC/IRC and related standards). Earlier you lit a light bulb with this note.\n\nMESSAGE: ${m.text}\nYOUR NOTE: ${ins.headline}\n${ins.correct ? 'Correct statement: ' + ins.correct + '\n' : ''}${ins.comment}\nReferences: ${(ins.refs || []).map(r => r.source + ' ' + r.where).join('; ') || 'none'}\n\nRECENT CONVERSATION:\n${transcript(m.id, 12)}\n\n${prior ? 'EARLIER FOLLOW-UPS:\n' + prior + '\n\n' : ''}${nameOf(S.uid)} now asks: ${q}\n\nAnswer in plain text, 3-8 sentences, exam-focused. Cite code sections or book chapters when you are confident; do not invent page numbers. Keep it to architecture and construction.`;
+    const prompt = `You are the study assistant in "ArchiChat", an architecture & construction exam-prep chat (ARE; IBC/IRC and related standards). Earlier you lit a light bulb with this note.\n\nMESSAGE: ${m.text}\nYOUR NOTE: ${ins.headline}\n${ins.correct ? 'Correct statement: ' + ins.correct + '\n' : ''}${ins.comment}\nReferences: ${(ins.refs || []).map(r => r.source + ' ' + r.where).join('; ') || 'none'}\n\nRECENT CONVERSATION:\n${transcript(m.id, 12)}\n\n${prior ? 'EARLIER FOLLOW-UPS:\n' + prior + '\n\n' : ''}${nameOf(S.uid)} now asks: ${q}\n\nAnswer in plain text, 3-8 sentences, exam-focused. Cite code sections or book chapters when you are confident; do not invent page numbers. Keep it to architecture and construction.`;
     try {
       const r = await S.sample(prompt, { cache: false, onText: ({ text }) => { if (S.asking) { S.asking.a = text; renderPane(); } } });
       const a = (r && r.text || '').trim().slice(0, 4000);
