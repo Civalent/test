@@ -1,0 +1,131 @@
+<title>Crit Room Invite</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow sheet, like a transmittal slip. Three copy fields, then the steps. */
+:root{
+  --paper:#f2f3ef; --sheet:#ffffff; --rule:#d3d7cf; --ink:#1b211e; --ink-2:#56605a; --ink-3:#848d87;
+  --blue:#294a7a; --blue-soft:#e3e9f3; --lamp:#e9a91c; --lamp-soft:#fbf0d4; --ok:#2f6a35;
+  --f-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121614; --sheet:#1a1f1c; --rule:#323a35; --ink:#e5e9e4; --ink-2:#a6afa9; --ink-3:#77817b;
+  --blue:#93b2e4; --blue-soft:#1d2a3d; --lamp:#ffc94a; --lamp-soft:#3a2e10; --ok:#9fd3a3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121614; --sheet:#1a1f1c; --rule:#323a35; --ink:#e5e9e4; --ink-2:#a6afa9; --ink-3:#77817b;
+  --blue:#93b2e4; --blue-soft:#1d2a3d; --lamp:#ffc94a; --lamp-soft:#3a2e10; --ok:#9fd3a3; color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.55 var(--f-body);
+  padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.sheet{max-width:620px;margin:0 auto;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.head{display:flex;gap:14px;align-items:center;padding:22px 22px 18px;border-bottom:1px solid var(--rule)}
+.head svg{flex:none;width:40px;height:40px}
+.head svg .glass{fill:var(--lamp)}
+.head svg .base{fill:var(--ink-2)}
+.head h1{margin:0;font:800 24px/1.15 var(--f-display);text-wrap:balance}
+.head p{margin:2px 0 0;color:var(--ink-2)}
+.body{padding:20px 22px 24px;display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:6px}
+.lbl{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.box{display:flex;gap:8px;align-items:stretch}
+.val{flex:1;min-width:0;border:1px solid var(--rule);border-radius:8px;background:var(--paper);padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+.val.big{font:700 20px/1.2 var(--f-display)}
+.val.mono{font:500 14px/1.4 var(--f-mono);color:var(--blue)}
+textarea.val{resize:vertical;min-height:150px;user-select:text;line-height:1.5}
+.copy{flex:none;min-width:84px;border:1px solid var(--blue);background:var(--blue);color:var(--sheet);border-radius:8px;padding:0 14px;font-weight:600;cursor:pointer}
+.copy.done{background:var(--ok);border-color:var(--ok)}
+.msgbox{flex-direction:column}
+.msgbox .copy{align-self:flex-start;padding:9px 14px}
+.open{color:var(--blue);font-weight:600;text-decoration:none}
+.open:hover{text-decoration:underline}
+.steps{border-top:1px solid var(--rule);padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.steps h2{margin:0 0 6px;font:700 15px var(--f-display)}
+.steps ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:14px}
+.steps b{color:var(--ink);font-weight:600}
+.tip{background:var(--lamp-soft);border-radius:8px;padding:10px 12px;font-size:14px}
+@media (max-width:560px){.steps{grid-template-columns:1fr}.box:not(.msgbox){flex-direction:column}.copy{padding:9px 14px;align-self:flex-start}}
+</style>
+
+<main class="sheet">
+  <div class="head">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="glass" d="M12 2.6a6.6 6.6 0 0 0-3.9 11.9c.8.6 1.2 1.4 1.2 2.3v.6h5.4v-.6c0-.9.4-1.7 1.2-2.3A6.6 6.6 0 0 0 12 2.6Z"/><rect class="base" x="9.3" y="18.2" width="5.4" height="1.6" rx=".6"/><rect class="base" x="10" y="20.4" width="4" height="1.4" rx=".6"/></svg>
+    <div>
+      <h1>Join me in Crit Room</h1>
+      <p>Our architecture &amp; construction study chat. Copy what you need and send it.</p>
+    </div>
+  </div>
+  <div class="body">
+    <div class="field">
+      <span class="lbl" id="nameLbl">Page name</span>
+      <div class="box">
+        <div class="val big" id="name" aria-labelledby="nameLbl">Crit Room</div>
+        <button class="copy" type="button" data-copy="name" id="copyName">Copy</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lbl" id="linkLbl">Page address</span>
+      <div class="box">
+        <div class="val mono" id="link" aria-labelledby="linkLbl">https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk</div>
+        <button class="copy" type="button" data-copy="link" id="copyLink">Copy</button>
+      </div>
+      <a class="open" href="https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk" target="_blank" rel="noopener">Open Crit Room ↗</a>
+    </div>
+
+    <div class="field">
+      <label class="lbl" for="msg">Message for your friend (edit it if you like)</label>
+      <div class="box msgbox">
+        <textarea class="val" id="msg">Hey! I set up Crit Room, our study chat for architecture and construction (ARE / IBC / IRC).
+
+Open it here: https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk
+
+Sign in to claude.ai first. Post anything you learn or any question you have, and answer mine. When the light bulb turns on, Claude has a correction, an answer or a code/book reference for us. There's also an exam quiz tab.</textarea>
+        <button class="copy" type="button" data-copy="msg" id="copyMsg">Copy message</button>
+      </div>
+    </div>
+
+    <div class="tip"><b>Before you send it:</b> the link only works for people you've shared Crit Room with. Do step 1 below first.</div>
+
+    <div class="steps">
+      <section>
+        <h2>You</h2>
+        <ol>
+          <li>Open Crit Room and click <b>Share</b>.</li>
+          <li>Invite your friend <b>by email as Editor</b>. If they're in your claude.ai organization, <b>Contributor</b> also works.</li>
+          <li>Don't turn on a public link, or outside friends can only read.</li>
+          <li>Copy the message above and send it.</li>
+        </ol>
+      </section>
+      <section>
+        <h2>Your friend</h2>
+        <ol>
+          <li>Sign in to claude.ai with the invited email.</li>
+          <li>Open the link and post a first message.</li>
+          <li>Click <b>Allow</b> when the page asks to use Claude. That turns on the bulb and the quiz.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+document.querySelectorAll('.copy').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const src = document.getElementById(btn.dataset.copy);
+    const text = 'value' in src && src.tagName === 'TEXTAREA' ? src.value : src.textContent.trim();
+    const label = btn.textContent;
+    const ok = () => { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = label; btn.classList.remove('done'); }, 1600); };
+    const fallback = () => {
+      if (src.tagName === 'TEXTAREA') { src.focus(); src.select(); }
+      else { const r = document.createRange(); r.selectNodeContents(src); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+      btn.textContent = 'Selected: press Ctrl+C';
+      setTimeout(() => { btn.textContent = label; }, 2400);
+    };
+    try { navigator.clipboard.writeText(text).then(ok, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>
