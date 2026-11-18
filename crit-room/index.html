@@ -30,8 +30,8 @@ button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 
-.app{height:100%;display:grid;grid-template-rows:auto 1fr;}
-header.top{display:flex;align-items:center;gap:14px;background:var(--sheet);border-bottom:1px solid var(--rule);
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-width:0}
+header.top{min-width:0;display:flex;align-items:center;gap:14px;background:var(--sheet);border-bottom:1px solid var(--rule);
   padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .brand{display:flex;flex-direction:column;min-width:0;flex:1}
 .brand h1{margin:0;font:800 20px/1.1 var(--f-display);letter-spacing:-.01em}
