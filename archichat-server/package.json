@@ -1,0 +1,17 @@
+{
+  "name": "archichat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared architecture & construction study chat with a Claude light bulb.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.10.0"
+  }
+}
