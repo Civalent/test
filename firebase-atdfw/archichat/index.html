@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArchiChat</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@800&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+:root{--paper:#f2f3ef;--sheet:#fff;--rule:#d3d7cf;--ink:#1b211e;--ink-2:#56605a;--blue:#294a7a;--lamp:#e9a91c}
+@media (prefers-color-scheme:dark){:root{--paper:#121614;--sheet:#1a1f1c;--rule:#323a35;--ink:#e5e9e4;--ink-2:#a6afa9;--blue:#93b2e4;--lamp:#ffc94a;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 "IBM Plex Sans",system-ui,sans-serif;display:grid;place-items:center;padding:24px 16px}
+main{width:100%;max-width:440px;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:14px;text-align:center;align-items:center}
+svg{width:48px;height:48px}
+h1{margin:0;font:800 30px/1.1 Archivo,"Helvetica Neue",Arial,sans-serif}
+p{margin:0;color:var(--ink-2)}
+a.btn{display:inline-block;background:var(--blue);color:var(--sheet);text-decoration:none;font-weight:600;padding:12px 22px;border-radius:8px}
+a.btn:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+small{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<main>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--lamp)" d="M12 2.6a6.6 6.6 0 0 0-3.9 11.9c.8.6 1.2 1.4 1.2 2.3v.6h5.4v-.6c0-.9.4-1.7 1.2-2.3A6.6 6.6 0 0 0 12 2.6Z"/><rect fill="var(--ink-2)" x="9.3" y="18.2" width="5.4" height="1.6" rx=".6"/><rect fill="var(--ink-2)" x="10" y="20.4" width="4" height="1.4" rx=".6"/></svg>
+  <h1>ArchiChat</h1>
+  <p>Our architecture &amp; construction study chat. Post what you learn, ask questions, and watch for the light bulb.</p>
+  <!-- To switch to the standalone app once it's online, change this href to https://archichat.app -->
+  <a class="btn" id="open" href="https://claude.ai/artifact/6exGYVhH6bpzVgzhDsR7kk" target="_blank" rel="noopener">Open ArchiChat in a new window</a>
+  <small>Sign in to claude.ai first. Ask the owner to share the chat with you.</small>
+</main>
+</body>
+</html>
