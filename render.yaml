@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: archichat
+    runtime: node
+    rootDir: archichat-server
+    plan: starter            # a paid plan is needed for the persistent disk that keeps your chat history
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: ROOM_CODE
+        sync: false          # you type it in the Render dashboard
+      - key: ANTHROPIC_API_KEY
+        sync: false          # you type it in the Render dashboard
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: archichat-data
+      mountPath: /var/data
+      sizeGB: 1
